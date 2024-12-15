@@ -48,23 +48,36 @@ char	*allocate_substring(const char *start, size_t len)
 	return (substring);
 }
 
-int	assign_split(char **splitarr, const char *start, size_t len, int index)
+static void	free_split(char **splitarr, int index)
 {
+	while (--index >= 0)
+		free(splitarr[index]);
+	free(splitarr);
+}
+
+static int	process_word(char **splitarr, const char **s, char c, int index)
+{
+	const char *start;
+	size_t len;
+
+	while (**s == c)
+		(*s)++;
+	start = *s;
+	while (**s && **s != c)
+		(*s)++;
+	len = *s - start;
 	splitarr[index] = allocate_substring(start, len);
 	if (!splitarr[index])
 	{
-		while (--index >= 0)
-			free(splitarr[index]);
-		free(splitarr);
-		return (0);
+		free_split(splitarr, index);
+		return 0;
 	}
-	return (1);
+	return 1;
 }
 
 char	**ft_split(char const *s, char c)
 {
 	char	**splitarr;
-	const char	*start;
 	int	count;
 	int	i;
 
@@ -77,14 +90,9 @@ char	**ft_split(char const *s, char c)
 		return (NULL);
 	while (i < count)
 	{
-		while (*s == c)
-			s++;
-		start = s;
-		while (*s && *s != c)
-			s++;
-		if (!assign_split(splitarr, start, s - start, i))
-			return (NULL);
-		i++;
+        	if (!process_word(splitarr, &s, c, i))
+	            return NULL;
+       		i++;	
 	}
 	splitarr[i] = (NULL);
 	return (splitarr);
